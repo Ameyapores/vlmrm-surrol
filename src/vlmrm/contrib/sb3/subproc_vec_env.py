@@ -1,9 +1,10 @@
-from typing import Tuple
+from typing import Tuple, Optional, Sequence
 
 import numpy as np
 from stable_baselines3.common.vec_env.subproc_vec_env import (
     SubprocVecEnv as StableBaselines3SubprocVecEnv,
 )
+from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv as StableBaselines3DummyVecEnv
 
 
 class SubprocVecEnv(StableBaselines3SubprocVecEnv):
@@ -29,6 +30,24 @@ class SubprocVecEnv(StableBaselines3SubprocVecEnv):
                     if pipe.poll():
                         renders[index] = pipe.recv()
                         completed_indices.add(index)
+        return renders
+
+    def step_wait(self):
+        obs, rew, done, infos = super().step_wait()
+        render_array = self.get_images()
+        infos[0]["render_array"] = render_array
+        return obs, rew, done, infos
+
+class DummyVecEnv(StableBaselines3DummyVecEnv):
+    def __init__(self, *args, render_dim: Tuple[int, int], **kwargs):
+        super().__init__(*args, **kwargs)
+        self.render_dim = render_dim
+
+    def get_images(self) -> Sequence[Optional[np.ndarray]]:
+
+        image_list = super().get_images()
+        renders = np.array(image_list)
+
         return renders
 
     def step_wait(self):

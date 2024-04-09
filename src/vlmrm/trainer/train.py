@@ -21,7 +21,7 @@ from vlmrm.contrib.sb3.base import get_clip_rewarded_rl_algorithm_class
 from vlmrm.contrib.sb3.callbacks import VideoRecorderCallback, WandbCallback
 from vlmrm.contrib.sb3.make_vec_env import make_vec_env
 from vlmrm.contrib.sb3.signal_handler import end_signal_handler
-from vlmrm.contrib.sb3.subproc_vec_env import SubprocVecEnv
+from vlmrm.contrib.sb3.subproc_vec_env import SubprocVecEnv, DummyVecEnv
 from vlmrm.envs.base import get_clip_rewarded_env_name, get_make_env, is_3d_env
 from vlmrm.reward_model import dist_worker_compute_reward, load_reward_model_from_config
 from vlmrm.trainer.config import CLIPRewardConfig, Config
@@ -59,7 +59,8 @@ def primary_worker(
         else {}
     )
     if config.is_clip_rewarded:
-        make_env_kwargs["episode_length"] = config.rl.episode_length
+        # make_env_kwargs["episode_length"] = config.rl.episode_length
+        # make_env_kwargs["max_timesteps"] = config.rl.episode_length
         env_name = get_clip_rewarded_env_name(config.env_name)
     else:
         make_env_kwargs["max_episode_steps"] = config.rl.episode_length
@@ -71,7 +72,8 @@ def primary_worker(
         make_env_fn,
         n_envs=config.rl.n_envs,
         seed=config.seed,
-        vec_env_cls=SubprocVecEnv,
+        # vec_env_cls=SubprocVecEnv,
+        vec_env_cls=DummyVecEnv if config.rl.n_envs == 1 else SubprocVecEnv,
         use_gpu_ids=config.rl.device_ids,
         vec_env_kwargs=dict(render_dim=config.render_dim),
     )
@@ -98,9 +100,11 @@ def primary_worker(
         rl_algorithm_class = get_clip_rewarded_rl_algorithm_class(config.env_name)
         algo = rl_algorithm_class(env=vec_env, config=config)
     else:
+    # env = make_env_fn()
         algo = SAC(
             config.rl.policy_name,
             vec_env,
+            # env,
             tensorboard_log=str(config.tb_dir),
             seed=config.seed,
             device="cuda:0",
@@ -142,12 +146,22 @@ def primary_worker(
 
 
 def train(config: str):
+    # command = " ".join(sys.argv)
+    # logger.info(f"Command called: {command}")
+    # assert torch.cuda.is_available()
+    # util.set_egl_env_vars()
+    
+    # config_dict = yaml.load(config, Loader=yaml.FullLoader)
+    # config_obj = Config(**config_dict)
+
     command = " ".join(sys.argv)
     logger.info(f"Command called: {command}")
     assert torch.cuda.is_available()
     util.set_egl_env_vars()
-
-    config_dict = yaml.load(config, Loader=yaml.FullLoader)
+    
+    with open(config, 'r') as f:
+        config_dict = yaml.load(f, Loader=yaml.FullLoader)
+    
     config_obj = Config(**config_dict)
 
     # When pickling the object, the __pydantic_serializer__ attribute gets lost.

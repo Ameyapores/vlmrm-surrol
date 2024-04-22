@@ -14,7 +14,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.save_util import load_from_zip_file, recursive_setattr
 from stable_baselines3.common.type_aliases import MaybeCallback, RolloutReturn
 from stable_baselines3.common.utils import check_for_correct_spaces, safe_mean
-from stable_baselines3.common.vec_env import VecEnv
+from stable_baselines3.common.vec_env import VecEnv, DummyVecEnv
 from stable_baselines3.common.vec_env.patch_gym import _convert_space
 
 from vlmrm.contrib.sb3.clip_buffer import CLIPReplayBuffer
@@ -31,6 +31,7 @@ class CLIPRewardedSAC(SAC):
         self,
         *,
         env: VecEnv,
+        # env: DummyVecEnv,
         config: Config,
         inference_only: bool = False,
     ):
@@ -149,6 +150,7 @@ class CLIPRewardedSAC(SAC):
 
         # The total rewards are indexed by environment
         rewards = rearrange(rewards, "n_steps n_envs -> n_envs n_steps")
+        print("this is clip reward", rewards)
         for env_idx in range(self.env.num_envs):
             # Compute sum of rewards per episode
             rewards_per_episode = np.sum(

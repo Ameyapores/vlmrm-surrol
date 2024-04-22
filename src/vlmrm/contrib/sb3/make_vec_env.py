@@ -3,7 +3,7 @@ import os
 import sys
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-import gymnasium
+import gym
 import torch
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
@@ -12,7 +12,7 @@ from vlmrm import util
 
 
 def make_vec_env(
-    make_env_fn: Callable[..., gymnasium.Env],
+    make_env_fn: Callable[..., gym.Env],
     *,
     vec_env_cls: Type[Union[DummyVecEnv, SubprocVecEnv]],
     n_envs: int,
@@ -56,8 +56,8 @@ def make_vec_env(
         print(f"gpu_ids_for_envs={gpu_ids_for_envs}")
     assert vec_env_kwargs is not None  # for mypy
 
-    def get_make_env_fn(rank: int, gpu_id: int) -> Callable[[], gymnasium.Env]:
-        def _init() -> gymnasium.Env:
+    def get_make_env_fn(rank: int, gpu_id: int) -> Callable[[], gym.Env]:
+        def _init() -> gym.Env:
             # For type checker:
             assert monitor_kwargs is not None
             assert env_kwargs is not None

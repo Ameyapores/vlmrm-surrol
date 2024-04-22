@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-import gymnasium
+import gym
 import torch as th
 from numpy import array
 from stable_baselines3.common.callbacks import BaseCallback
@@ -46,7 +46,7 @@ class CheckpointCallback(SB3CheckpointCallback):
             self.current_replay_buffer_path = self._checkpoint_path(
                 "replay_buffer_", extension="pkl"
             )
-        ret = super()._on_step()
+        ret = super()._on_step() 
         if (
             has_replay_buffer
             and previous_replay_buffer_path
@@ -64,7 +64,7 @@ class CheckpointCallback(SB3CheckpointCallback):
 class VideoRecorderCallback(BaseCallback):
     def __init__(
         self,
-        eval_env: gymnasium.Env,
+        eval_env: gym.Env,
         render_freq: int,
         n_eval_episodes: int = 1,
         deterministic: bool = True,
@@ -101,7 +101,8 @@ class VideoRecorderCallback(BaseCallback):
                 """
                 screen = self._eval_env.render()
                 # PyTorch uses CxHxW vs HxWxC gym (and tensorflow) image convention
-                screens.append(screen.transpose(2, 0, 1))
+                # screens.append(screen.transpose(2, 0, 1))
+                screens.append(screen)
 
             evaluate_policy(
                 self.model,
@@ -110,11 +111,11 @@ class VideoRecorderCallback(BaseCallback):
                 n_eval_episodes=self._n_eval_episodes,
                 deterministic=self._deterministic,
             )
-            self.logger.record(
-                "trajectory/video",
-                Video(th.ByteTensor(array([screens])), fps=40),
-                exclude=("stdout", "log", "json", "csv"),
-            )
+            # self.logger.record(
+            #     "trajectory/video",
+            #     Video(th.ByteTensor(array([screens])), fps=40),
+            #     exclude=("stdout", "log", "json", "csv"),
+            # )
         return True
 
 

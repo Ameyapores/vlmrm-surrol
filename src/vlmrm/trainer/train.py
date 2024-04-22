@@ -59,13 +59,15 @@ def primary_worker(
         else {}
     )
     if config.is_clip_rewarded:
-        # make_env_kwargs["episode_length"] = config.rl.episode_length
+        make_env_kwargs["episode_length"] = config.rl.episode_length
         # make_env_kwargs["max_timesteps"] = config.rl.episode_length
         env_name = get_clip_rewarded_env_name(config.env_name)
     else:
         make_env_kwargs["max_episode_steps"] = config.rl.episode_length
         env_name = config.env_name
-    make_env_fn = get_make_env(env_name, **make_env_kwargs)
+    make_env_fn = get_make_env(env_name, render_mode='rgb_array',**make_env_kwargs)
+    ###new
+    make_eval_env_fn = get_make_env(env_name, render_mode='rgb_array',**make_env_kwargs)
 
     logger.info("Creating environment instance")
     vec_env = make_vec_env(
@@ -96,6 +98,7 @@ def primary_worker(
         wandb.define_metric(metric, step_metric="global_step")
 
     logger.info("Setting up RL algorithm")
+    
     if config.is_clip_rewarded:
         rl_algorithm_class = get_clip_rewarded_rl_algorithm_class(config.env_name)
         algo = rl_algorithm_class(env=vec_env, config=config)
@@ -114,7 +117,8 @@ def primary_worker(
     signal_handler.checkpoint_dir = str(config.checkpoints_path)
 
     video_callback = VideoRecorderCallback(
-        eval_env=make_env_fn(),
+        # eval_env=make_env_fn(),
+        eval_env=make_eval_env_fn(),
         render_freq=config.logging.video_freq // config.rl.n_envs,
     )
     wandb_callback = WandbCallback(

@@ -1,6 +1,6 @@
 from typing import Callable
 
-import gymnasium
+import gym
 
 
 def get_clip_rewarded_env_name(env_name: str) -> str:
@@ -21,9 +21,9 @@ def get_make_env(
     render_mode: str = "rgb_array",
     **kwargs,
 ) -> Callable:
-    def make_env_wrapper() -> gymnasium.Env:
-        env: gymnasium.Env
-        env = gymnasium.make(
+    def make_env_wrapper() -> gym.Env:
+        env: gym.Env
+        env = gym.make(
             env_name,
             render_mode=render_mode,
             **kwargs,
